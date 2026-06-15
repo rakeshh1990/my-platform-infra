@@ -1,0 +1,1 @@
+minikube start --nodes=2 --cpus=4 --memory=4096 --driver=docker
