@@ -12,6 +12,7 @@ resource "null_resource" "minikube_cluster" {
     profile = var.minikube_profile
     cpus    = var.minikube_cpus
     memory  = var.minikube_memory
+    nodes   = var.minikube_nodes
   }
 
   provisioner "local-exec" {
@@ -22,11 +23,13 @@ resource "null_resource" "minikube_cluster" {
       else
         minikube start \
           -p ${var.minikube_profile} \
+          --nodes=${var.minikube_nodes} \
           --cpus=${var.minikube_cpus} \
           --memory=${var.minikube_memory} \
-          --driver=docker
+          --driver=docker \
+          --ports=80:80,443:443
       fi
-      kubectl wait --for=condition=Ready node/${var.minikube_profile} --timeout=300s
+      kubectl wait --for=condition=Ready nodes --all --timeout=300s
     EOT
   }
 

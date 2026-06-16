@@ -27,6 +27,12 @@ variable "minikube_memory" {
   default     = 8192
 }
 
+variable "minikube_nodes" {
+  description = "Number of nodes in the minikube cluster"
+  type        = number
+  default     = 2
+}
+
 variable "gitops_repo_url" {
   description = "URL of the GitOps repo containing apps/ and helm/"
   type        = string
