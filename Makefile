@@ -3,7 +3,7 @@ MINIKUBE_NODES   ?= 2
 MINIKUBE_CPUS    ?= 4
 MINIKUBE_MEMORY  ?= 4096
 
-.PHONY: bootstrap ensure-cluster ensure-ingress-proxy
+.PHONY: bootstrap ensure-cluster ensure-ingress-proxy disable-ingress-proxy
 
 bootstrap: ensure-cluster
 	terraform -chdir=terraform init
@@ -32,6 +32,9 @@ ensure-ingress-proxy:
 	docker run -d --restart unless-stopped --name ingress-proxy-http  --network $(MINIKUBE_PROFILE) -p 80:8080  alpine/socat TCP-LISTEN:8080,fork,reuseaddr TCP:$$NODE_IP:$$HTTP_PORT; \
 	docker run -d --restart unless-stopped --name ingress-proxy-https --network $(MINIKUBE_PROFILE) -p 443:8443 alpine/socat TCP-LISTEN:8443,fork,reuseaddr TCP:$$NODE_IP:$$HTTPS_PORT
 
+disable-ingress-proxy:
+	docker rm -f ingress-proxy-http ingress-proxy-https 2>/dev/null || true
+
 .PHONY: apply destroy
 
 apply:
@@ -43,12 +46,9 @@ destroy:
 .PHONY: up down
 
 up:
-	minikube start -p $(MINIKUBE_PROFILE) \
-		--nodes=$(MINIKUBE_NODES) \
-		--cpus=$(MINIKUBE_CPUS) \
-		--memory=$(MINIKUBE_MEMORY) \
-		--driver=docker
+	minikube start -p $(MINIKUBE_PROFILE)
 	$(MAKE) ensure-ingress-proxy
 
 down:
 	minikube stop -p $(MINIKUBE_PROFILE)
+	$(MAKE) disable-ingress-proxy
