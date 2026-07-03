@@ -4,7 +4,7 @@ variable "gitops_repo" {
 
 variable "gitops_path" {
   type    = string
-  default = "apps"
+  default = "root"
 }
 
 variable "target_revision" {
