@@ -1,56 +1,80 @@
-resource "helm_release" "argocd" {
-  name             = "argocd"
-  repository       = "https://argoproj.github.io/argo-helm"
-  chart            = "argo-cd"
-  namespace        = "argocd"
-  create_namespace = true
-  wait             = true
-  timeout          = 600
+resource "helm_release" "this" {
 
-  set {
-    name  = "configs.params.server\\.insecure"
-    value = "true"
-  }
+  name       = "argocd"
+
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argo-cd"
+  version    = var.chart_version
+
+  namespace        = var.namespace
+  create_namespace = true
+
+  timeout = 600
 
   set {
     name  = "server.service.type"
     value = "NodePort"
   }
 
-  depends_on = [null_resource.minikube_cluster]
+  set {
+    name  = "configs.params.server\\.insecure"
+    value = "true"
+  }
+
 }
 
-resource "kubernetes_ingress_v1" "argocd" {
+resource "kubernetes_ingress_v1" "this" {
+
   metadata {
+
     name      = "argocd-server"
-    namespace = "argocd"
+    namespace = var.namespace
+
     annotations = {
       "nginx.ingress.kubernetes.io/ssl-redirect" = "false"
     }
+
   }
+
   spec {
-    ingress_class_name = "nginx"
+
+    ingress_class_name = var.ingress_class_name
+
     rule {
-      host = "argocd.local"
+
+      host = var.hostname
+
       http {
+
         path {
+
           path      = "/"
           path_type = "Prefix"
+
           backend {
+
             service {
+
               name = "argocd-server"
+
               port {
                 number = 80
               }
+
             }
+
           }
+
         }
+
       }
+
     }
+
   }
 
   depends_on = [
-    helm_release.nginx_ingress,
-    helm_release.argocd
+    helm_release.this
   ]
+
 }
