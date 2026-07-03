@@ -2,13 +2,14 @@ MINIKUBE_PROFILE ?= minikube
 MINIKUBE_NODES   ?= 2
 MINIKUBE_CPUS    ?= 4
 MINIKUBE_MEMORY  ?= 4096
+TF_DIR := terraform/environments/local
 
 .PHONY: bootstrap ensure-cluster ensure-ingress-proxy disable-ingress-proxy
 
 bootstrap: ensure-cluster
-	terraform -chdir=terraform init
-	terraform -chdir=terraform apply -target=helm_release.argocd -auto-approve
-	terraform -chdir=terraform apply -auto-approve
+	terraform -chdir=$(TF_DIR) init
+	terraform -chdir=$(TF_DIR) apply -target=helm_release.argocd -auto-approve
+	terraform -chdir=$(TF_DIR) apply -auto-approve
 	@echo ""
 	@echo "=== Bootstrap complete ==="
 	@echo "Admin password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
@@ -35,13 +36,19 @@ ensure-ingress-proxy:
 disable-ingress-proxy:
 	docker rm -f ingress-proxy-http ingress-proxy-https 2>/dev/null || true
 
-.PHONY: apply destroy
+.PHONY: init plan apply destroy
 
-apply:
-	terraform -chdir=terraform apply -auto-approve
+init:
+	terraform -chdir=$(TF_DIR) init
+
+plan:init
+	terraform -chdir=$(TF_DIR) plan
+
+apply:init
+	terraform -chdir=$(TF_DIR) apply -auto-approve
 
 destroy:
-	terraform -chdir=terraform destroy -auto-approve
+	terraform -chdir=$(TF_DIR) destroy -auto-approve
 
 .PHONY: up down
 
