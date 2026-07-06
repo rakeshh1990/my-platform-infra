@@ -23,6 +23,12 @@ module "argocd" {
   ]
 }
 
+module "external_secrets" {
+
+  source = "../../modules/external-secrets"
+
+}
+
 module "bootstrap" {
   source = "../../modules/bootstrap"
 
